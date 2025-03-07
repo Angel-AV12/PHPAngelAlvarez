@@ -1,0 +1,43 @@
+networks:
+  php_network:
+
+services:
+
+  server:
+    build:
+      context: ./
+      dockerfile: dockerfiles/nginx.dockerfile
+    ports:
+      - 8080:80
+    volumes:
+      - ./src:/var/www/html
+      - ./nginx/default.conf:/etc/conf.d/default.conf:ro
+    depends_on:
+      - php
+      - mysql
+    container_name: php_network
+    
+  php:
+    build:
+      context: .
+      dockerfile: dockerfiles/php.dockerfile
+    volumes:
+      - ./src:/var/www/html:delegated
+    container_name: app_php
+    networks:
+      - php_network
+    
+  mysql:
+    image: mysql:latest
+    restart: unless-stopped
+    tty: true
+    container_name: app_mysql
+    env_file:
+      - mysql/.env
+    ports:
+      - 33010:3306
+    networks:
+      - php_network
+    volumes:
+      - ./mysql_data:/var/lib/mysql
+    
